@@ -15,52 +15,62 @@
   </style>
 </head>
 <body>
-  <div id="clock">--:--</div>
+  <div id="clock">--:--:--</div>
 
   <script>
     const clock = document.getElementById('clock');
+    let customHours = null;
     let customMinutes = null;
     let customSeconds = 0;
     let currentMinuteLength = 60;
     let mode = 'sync'; // 'sync' or 'drift'
 
-    function updateClockDisplay(h, m) {
+    function updateClockDisplay(h, m, s) {
       const hh = String(h).padStart(2, '0');
       const mm = String(m).padStart(2, '0');
-      clock.textContent = `${hh}:${mm}`;
+      const ss = String(s).padStart(2, '0');
+      clock.textContent = `${hh}:${mm}:${ss}`;
     }
 
     function startDriftClock() {
       const now = new Date();
-      let hours = now.getHours();
+      customHours = now.getHours();
       customMinutes = now.getMinutes();
       customSeconds = now.getSeconds();
       mode = 'drift';
 
-      updateClockDisplay(hours, customMinutes);
-
-      function tick() {
-        customSeconds++;
-        if (customSeconds >= currentMinuteLength) {
-          customSeconds = 0;
-          customMinutes++;
-          if (customMinutes >= 60) {
-            mode = 'sync'; // 時間がずれて1時間たったので同期に戻す
-            return;
-          }
-          updateClockDisplay(hours, customMinutes);
-          currentMinuteLength = 45 + Math.floor(Math.random() * 31); // 45〜75秒
-        }
-      }
+      updateClockDisplay(customHours, customMinutes, customSeconds);
+      currentMinuteLength = 45 + Math.floor(Math.random() * 31); // 45〜75秒
 
       const interval = setInterval(() => {
         if (mode === 'sync') {
           clearInterval(interval);
-          startClock(); // 同期に戻る
-        } else {
-          tick();
+          startClock(); // 同期モードに戻る
+          return;
         }
-      }, 1000);
+
+        customSeconds++;
+
+        if (customSeconds >= currentMinuteLength) {
+          customSeconds = 0;
+          customMinutes++;
+          currentMinuteLength = 45 + Math.floor(Math.random() * 31); // 次の分の長さ
+
+          if (customMinutes >= 60) {
+            customMinutes = 0;
+            customHours++;
+
+            if (customHours >= 24) {
+              customHours = 0;
+            }
+
+            mode = 'sync'; // ちょうど1時間経ったので同期に戻す
+            return;
+          }
+        }
+
+        updateClockDisplay(customHours, customMinutes, Math.floor(customSeconds));
+      }, 1000); // 1秒ごとにカウント（見た目はゆらぐ）
     }
 
     function startClock() {
@@ -70,15 +80,17 @@
         const now = new Date();
         const h = now.getHours();
         const m = now.getMinutes();
-        updateClockDisplay(h, m);
+        const s = now.getSeconds();
 
-        if (m !== 0) {
-          // 正時を過ぎたらドリフトモードに移行
+        updateClockDisplay(h, m, s);
+
+        if (m !== 0 || s !== 0) {
+          // 00分00秒以外ならドリフトモードへ
           startDriftClock();
         }
       }
 
-      syncLoop(); // 初回即時実行
+      syncLoop();
       const syncInterval = setInterval(() => {
         if (mode === 'drift') {
           clearInterval(syncInterval);
