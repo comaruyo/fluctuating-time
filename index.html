@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>変動する時計</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #111;
+      color: #0f0;
+      font-size: 4rem;
+      padding-top: 20vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="clock">00:00</div>
+
+  <script>
+    let minutes = 0;
+    let seconds = 0;
+    const clock = document.getElementById('clock');
+
+    function updateClock() {
+      clock.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function tick() {
+      seconds++;
+      if (seconds >= currentMinuteLength) {
+        minutes++;
+        seconds = 0;
+        currentMinuteLength = 45 + Math.floor(Math.random() * 31); // 45秒〜75秒
+      }
+      updateClock();
+    }
+
+    let currentMinuteLength = 60;
+    setInterval(tick, 1000); // 1秒ごとに進む（見かけは変動）
+
+    updateClock();
+  </script>
+</body>
+</html>
